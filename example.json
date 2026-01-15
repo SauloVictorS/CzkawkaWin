@@ -1,0 +1,36 @@
+{
+  "duplicate_group_1": [
+    {
+      "path": "C:\\Photos\\vacation_2024.jpg",
+      "modified_date": 1704067200,
+      "size": 2457600,
+      "hash": "abc123def456"
+    },
+    {
+      "path": "C:\\Backup\\Photos\\vacation_2024.jpg",
+      "modified_date": 1704067200,
+      "size": 2457600,
+      "hash": "abc123def456"
+    }
+  ],
+  "duplicate_group_2": [
+    {
+      "path": "C:\\Videos\\birthday_party.mp4",
+      "modified_date": 1709251200,
+      "size": 15728640,
+      "hash": "xyz789uvw012"
+    },
+    {
+      "path": "D:\\Archived\\Videos\\birthday_party.mp4",
+      "modified_date": 1709251200,
+      "size": 15728640,
+      "hash": "xyz789uvw012"
+    },
+    {
+      "path": "E:\\External\\birthday_party.mp4",
+      "modified_date": 1709251200,
+      "size": 15728640,
+      "hash": "xyz789uvw012"
+    }
+  ]
+}
