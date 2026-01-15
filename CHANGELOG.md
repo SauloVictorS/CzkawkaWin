@@ -35,17 +35,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned Features
-- File deletion capabilities
-- Side-by-side file comparison
-- Audio file preview
-- Export filtered results
-- Drag-and-drop JSON loading
-- Multiple file selection
-- Keyboard shortcuts
+- Full integration with Czkawka scanning
+- File deletion with safety confirmations
+- Compare files side-by-side
 - Settings panel
-- Custom thumbnail cache management
-- Batch operations
-- Search and filter functionality
 
 ---
 

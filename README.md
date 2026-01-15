@@ -44,14 +44,14 @@ Watch videos directly in the app with playback controls and metadata display.
 ### Installation
 
 #### Option 1: Download Release
-1. Download the latest release from the [Releases](https://github.com/yourusername/CzkawkaWin/releases) page
+1. Download the latest release from the [Releases](https://github.com/SauloVictorS/CzkawkaWin/releases) page
 2. Extract the ZIP file
 3. Run `CzkawkaWin.exe`
 
 #### Option 2: Build from Source
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/CzkawkaWin.git
+git clone https://github.com/SauloVictorS/CzkawkaWin.git
 cd CzkawkaWin
 
 # Restore dependencies
@@ -128,6 +128,7 @@ CzkawkaWin/
 - [ ] Full integration with Czkawka scanning
 - [ ] File deletion with safety confirmations
 - [ ] Compare files side-by-side
+- [ ] Settings panel
 
 ## 🤝 Contributing
 
