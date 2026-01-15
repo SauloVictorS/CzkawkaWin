@@ -23,12 +23,15 @@ A high-performance Windows desktop application for visualizing and managing dupl
 
 ### Empty State
 Clean interface when no data is loaded, with helpful instructions for getting started.
+<img width="1086" height="643" alt="image" src="https://github.com/user-attachments/assets/6b3ae135-213d-42b9-9315-eedbd7aba3df" />
 
 ### Groups and Files View
 Browse duplicate groups sorted by file size, with thumbnails for images and videos.
+<img width="1086" height="643" alt="image" src="https://github.com/user-attachments/assets/0e0894b4-d5e5-485f-a803-d32ee62a970b" />
 
 ### Video Preview
 Watch videos directly in the app with playback controls and metadata display.
+<img width="1293" height="776" alt="image" src="https://github.com/user-attachments/assets/56e5e681-1695-415b-88c7-d53e50bd949e" />
 
 ## 🚀 Getting Started
 
