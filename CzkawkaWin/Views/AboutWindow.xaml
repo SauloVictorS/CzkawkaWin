@@ -1,0 +1,122 @@
+﻿<Window x:Class="CzkawkaWin.Views.AboutWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="About CzkawkaWin" 
+        Height="650 " Width="450"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        ThemeMode="Dark"
+        Background="#1e1e1e">
+
+    <Grid Margin="30">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- App Icon and Name -->
+        <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,0,0,20">
+            <Image Source="/magnifier.png" Width="64" Height="64" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+            <TextBlock Text="CzkawkaWin" 
+                       FontSize="28" FontWeight="Bold" 
+                       Foreground="#2196F3" 
+                       HorizontalAlignment="Center"/>
+            <TextBlock x:Name="TxtVersion" 
+                       Text="Version 1.0.0" 
+                       FontSize="14" 
+                       Foreground="#888" 
+                       HorizontalAlignment="Center"
+                       Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <!-- Description -->
+        <Border Grid.Row="1" Background="#2a2a2a" CornerRadius="8" Padding="20" Margin="0,0,0,20">
+            <StackPanel>
+                <TextBlock Text="Duplicate File Finder" 
+                           FontSize="16" FontWeight="SemiBold" 
+                           Foreground="#ddd" 
+                           HorizontalAlignment="Center"
+                           Margin="0,0,0,10"/>
+                <TextBlock TextWrapping="Wrap" 
+                           TextAlignment="Center"
+                           Foreground="#aaa"
+                           FontSize="13"
+                           LineHeight="22">
+                    A modern Windows interface for finding and managing duplicate files.
+                    Powered by the Czkawka CLI engine.
+                </TextBlock>
+            </StackPanel>
+        </Border>
+
+        <!-- Links Section -->
+        <StackPanel Grid.Row="2" Margin="0,0,0,20">
+            <Button x:Name="BtnGitHub" 
+                    Click="BtnGitHub_Click"
+                    Cursor="Hand"
+                    Background="#2a2a2a"
+                    BorderBrush="#444"
+                    Padding="15,12"
+                    HorizontalContentAlignment="Center" HorizontalAlignment="Center">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="⭐" FontSize="18" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                    <StackPanel>
+                        <TextBlock Text="View on GitHub" 
+                                   FontSize="14" FontWeight="SemiBold" 
+                                   Foreground="#ddd"/>
+                        <TextBlock Text="github.com/SauloVictorS/CzkawkaWin" 
+                                   FontSize="11" 
+                                   Foreground="#2196F3"/>
+                    </StackPanel>
+                </StackPanel>
+            </Button>
+            
+            <Button x:Name="BtnCzkawka" 
+                    Click="BtnCzkawka_Click"
+                    Cursor="Hand"
+                    Background="#2a2a2a"
+                    BorderBrush="#444"
+                    Padding="15,12"
+                    HorizontalContentAlignment="Center"
+                    Margin="0,8,0,0" HorizontalAlignment="Center">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="🦀" FontSize="18" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                    <StackPanel>
+                        <TextBlock Text="Czkawka Project" 
+                                   FontSize="14" FontWeight="SemiBold" 
+                                   Foreground="#ddd"/>
+                        <TextBlock Text="Original CLI tool by qarmin" 
+                                   FontSize="11" 
+                                   Foreground="#888"/>
+                    </StackPanel>
+                </StackPanel>
+            </Button>
+        </StackPanel>
+
+        <!-- Copyright -->
+        <StackPanel Grid.Row="3" VerticalAlignment="Bottom" HorizontalAlignment="Center">
+            <TextBlock Text="&#169; 2026 Saulo Victor" 
+                       FontSize="12" 
+                       Foreground="#666" 
+                       HorizontalAlignment="Center"/>
+            <TextBlock Text="Licensed under MIT License" 
+                       FontSize="11" 
+                       Foreground="#555" 
+                       HorizontalAlignment="Center"
+                       Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <!-- Close Button -->
+        <Button Grid.Row="4" 
+                Content="Close" 
+                Click="BtnClose_Click"
+                HorizontalAlignment="Center"
+                Padding="30,10"
+                Margin="0,20,0,0"
+                Background="#333"
+                Foreground="#ddd"
+                BorderBrush="#444"/>
+    </Grid>
+</Window>

@@ -11,6 +11,8 @@ using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using FFMpegCore;
+using CzkawkaWin.Events;
+using CzkawkaWin.Views;
 
 namespace CzkawkaWin
 {
@@ -19,12 +21,31 @@ namespace CzkawkaWin
         private DispatcherTimer? _videoTimer;
         private bool _isDraggingSeekBar = false;
         private TimeSpan _videoDuration = TimeSpan.Zero;
+        private List<DuplicateGroup>? _currentResults;
+        private string? _currentJsonFilePath;
 
         // Application version from assembly
         public string AppVersion => GetType().Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
+        
+        // Commands for keyboard shortcuts
+        public ICommand OpenJsonCommand { get; }
+        public ICommand ExportJsonCommand { get; }
+        public ICommand ClearResultsCommand { get; }
+        public ICommand StartScanCommand { get; }
+        public ICommand StopScanCommand { get; }
 
         public MainWindow()
         {
+            // Initialize commands before InitializeComponent
+            OpenJsonCommand = new RelayCommand(_ => LoadJsonReport());
+            ExportJsonCommand = new RelayCommand(_ => MenuExportJson_Click(this, new RoutedEventArgs()), 
+                _ => _currentResults != null && _currentResults.Count > 0);
+            ClearResultsCommand = new RelayCommand(_ => MenuClearResults_Click(this, new RoutedEventArgs()),
+                _ => _currentResults != null && _currentResults.Count > 0);
+            StartScanCommand = new RelayCommand(_ => ExecuteStartScan());
+            StopScanCommand = new RelayCommand(_ => ScannerTabControl?.StopCurrentScan(),
+                _ => ScannerTabControl?.IsScanning == true);
+            
             InitializeComponent();
             DataContext = this; // Set DataContext to enable version binding
 
@@ -32,17 +53,353 @@ namespace CzkawkaWin
             var ffmpegPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ffmpeg");
             GlobalFFOptions.Configure(options => options.BinaryFolder = ffmpegPath);
 
+
             // Timer to update video position
             _videoTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromMilliseconds(200)
             };
             _videoTimer.Tick += VideoTimer_Tick;
+            
+            // Connect FiltersTab to ScannerTab
+            ScannerTabControl.SetFiltersTab(FiltersTabControl);
+            
+            // Subscribe to Scanner events
+            ScannerTabControl.ScanStarted += OnScanStarted;
+            ScannerTabControl.ScanCompleted += OnScanCompleted;
+            
+            // Start on Scanner tab by default
+            MainTabControl.SelectedIndex = 0;
+        }
+
+        // ============ SCANNER EVENT HANDLER ============
+        
+        private void OnScanStarted(object? sender, EventArgs e)
+        {
+            MenuStopScanItem.IsEnabled = true;
+            TxtStatusBar.Text = "Scanning for duplicate files...";
+        }
+        
+        private void OnScanCompleted(object? sender, ScanCompletedEventArgs e)
+        {
+            MenuStopScanItem.IsEnabled = false;
+            
+            if (e.Success && !string.IsNullOrEmpty(e.JsonContent))
+            {
+                _currentJsonFilePath = e.JsonFilePath;
+                
+                if (e.IsEmpty)
+                {
+                    TxtStatus.Text = "No duplicates found";
+                    TxtStatusBar.Text = $"Scan completed in {FormatDuration(e.Duration)} - No duplicate files found.";
+                    MessageBox.Show(
+                        "Scan completed successfully, but no duplicate files were found.",
+                        "Scan Complete",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                }
+                else
+                {
+                    // Load results from scan
+                    LoadResultsFromJson(e.JsonContent);
+                    
+                    // Switch to Results tab (index 2: Scanner=0, Filters=1, Results=2)
+                    MainTabControl.SelectedIndex = 2;
+                    
+                    TxtStatus.Text = $"{_currentResults?.Count ?? 0} groups";
+                    TxtStatusBar.Text = $"Scan completed in {FormatDuration(e.Duration)}. Found {_currentResults?.Count ?? 0} duplicate groups.";
+                }
+            }
+            else if (e.Cancelled)
+            {
+                TxtStatus.Text = "Cancelled";
+                TxtStatusBar.Text = "Scan was cancelled by user.";
+            }
+            else if (!e.Success)
+            {
+                TxtStatus.Text = "Error";
+                TxtStatusBar.Text = $"Scan failed: {e.ErrorMessage}";
+                MessageBox.Show(
+                    $"Scan failed:\n\n{e.ErrorMessage}",
+                    "Scan Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
+        
+        private void LoadResultsFromJson(string jsonContent)
+        {
+            try
+            {
+                var groups = ParseJsonContent(jsonContent);
+                
+                _currentResults = groups;
+                GroupsList.ItemsSource = groups;
+                
+                TxtGroupCount.Text = $"({groups.Count})";
+                MenuExportJsonItem.IsEnabled = groups.Count > 0;
+                MenuClearResultsItem.IsEnabled = groups.Count > 0;
+                EmptyGroupsState.Visibility = Visibility.Collapsed;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading results: {ex.Message}", "Error", 
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        
+        /// <summary>
+        /// Parse JSON content supporting both Czkawka CLI and legacy formats.
+        /// CLI format: Dictionary&lt;size, List&lt;List&lt;FileItem&gt;&gt;&gt;
+        /// Legacy format: Dictionary&lt;key, List&lt;FileItem&gt;&gt;
+        /// </summary>
+        private static List<DuplicateGroup> ParseJsonContent(string jsonContent)
+        {
+            using var doc = JsonDocument.Parse(jsonContent);
+            var root = doc.RootElement;
+            
+            // Detect format by checking the structure of the first value
+            bool isCliFormat = false;
+            foreach (var property in root.EnumerateObject())
+            {
+                if (property.Value.ValueKind == JsonValueKind.Array && property.Value.GetArrayLength() > 0)
+                {
+                    var firstElement = property.Value[0];
+                    // CLI format has nested arrays: [[{...}, {...}]]
+                    // Legacy format has direct objects: [{...}, {...}]
+                    isCliFormat = firstElement.ValueKind == JsonValueKind.Array;
+                    break;
+                }
+            }
+            
+            return isCliFormat 
+                ? ProcessCliFormat(jsonContent) 
+                : ProcessLegacyFormat(jsonContent);
+        }
+        
+        /// <summary>
+        /// Process Czkawka CLI format: Dictionary&lt;size, List&lt;List&lt;FileItem&gt;&gt;&gt;
+        /// </summary>
+        private static List<DuplicateGroup> ProcessCliFormat(string jsonContent)
+        {
+            var rawData = JsonSerializer.Deserialize<Dictionary<string, List<List<FileItem>>>>(jsonContent);
+            var resultList = new List<DuplicateGroup>();
+
+            if (rawData != null)
+            {
+                foreach (var kvp in rawData)
+                {
+                    // Each size key can have multiple groups of duplicates
+                    foreach (var duplicateGroup in kvp.Value)
+                    {
+                        if (duplicateGroup.Count > 0)
+                        {
+                            long size = duplicateGroup[0].Size;
+
+                            resultList.Add(new DuplicateGroup
+                            {
+                                SizeBytes = size,
+                                Count = duplicateGroup.Count,
+                                Items = duplicateGroup
+                            });
+                        }
+                    }
+                }
+            }
+
+            resultList.Sort((a, b) => b.SizeBytes.CompareTo(a.SizeBytes));
+            return resultList;
+        }
+        
+        /// <summary>
+        /// Process legacy/GUI format: Dictionary&lt;key, List&lt;FileItem&gt;&gt;
+        /// </summary>
+        private static List<DuplicateGroup> ProcessLegacyFormat(string jsonContent)
+        {
+            var rawData = JsonSerializer.Deserialize<Dictionary<string, List<FileItem>>>(jsonContent);
+            var resultList = new List<DuplicateGroup>();
+
+            if (rawData != null)
+            {
+                foreach (var kvp in rawData)
+                {
+                    if (kvp.Value.Count > 0)
+                    {
+                        long size = kvp.Value[0].Size;
+
+                        resultList.Add(new DuplicateGroup
+                        {
+                            SizeBytes = size,
+                            Count = kvp.Value.Count,
+                            Items = kvp.Value
+                        });
+                    }
+                }
+            }
+
+            resultList.Sort((a, b) => b.SizeBytes.CompareTo(a.SizeBytes));
+            return resultList;
+        }
+        
+        private static string FormatDuration(TimeSpan duration)
+        {
+            if (duration.TotalHours >= 1)
+                return duration.ToString(@"h\:mm\:ss");
+            if (duration.TotalMinutes >= 1)
+                return duration.ToString(@"m\:ss\.f");
+            return $"{duration.TotalSeconds:F1}s";
+        }
+
+        // ============ MENU HANDLERS ============
+        
+        private void MenuOpenJson_Click(object sender, RoutedEventArgs e)
+        {
+            // Switch to Results tab and load JSON (index 2: Scanner=0, Filters=1, Results=2)
+            MainTabControl.SelectedIndex = 2;
+            LoadJsonReport();
+        }
+        
+        private void MenuExportJson_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentResults == null || _currentResults.Count == 0)
+            {
+                MessageBox.Show("No results to export.", "Export", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            
+            var saveDialog = new SaveFileDialog
+            {
+                Filter = "JSON files (*.json)|*.json",
+                Title = "Export Results",
+                FileName = $"czkawka_export_{DateTime.Now:yyyyMMdd_HHmmss}.json"
+            };
+            
+            if (saveDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    // If we have a current JSON file, just copy it
+                    if (!string.IsNullOrEmpty(_currentJsonFilePath) && File.Exists(_currentJsonFilePath))
+                    {
+                        File.Copy(_currentJsonFilePath, saveDialog.FileName, overwrite: true);
+                    }
+                    else
+                    {
+                        // Rebuild JSON from current results
+                        // Use Czkawka format: Dictionary<size, List<List<FileItem>>>
+                        var exportData = new Dictionary<string, List<List<FileItem>>>();
+                        foreach (var group in _currentResults)
+                        {
+                            string sizeKey = group.SizeBytes.ToString();
+                            if (!exportData.ContainsKey(sizeKey))
+                            {
+                                exportData[sizeKey] = new List<List<FileItem>>();
+                            }
+                            exportData[sizeKey].Add(group.Items);
+                        }
+                        
+                        var json = JsonSerializer.Serialize(exportData, new JsonSerializerOptions { WriteIndented = true });
+                        File.WriteAllText(saveDialog.FileName, json);
+                    }
+                    
+                    TxtStatusBar.Text = $"Exported to: {Path.GetFileName(saveDialog.FileName)}";
+                    MessageBox.Show($"Results exported successfully!\n\n{saveDialog.FileName}", 
+                        "Export Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Export failed: {ex.Message}", "Error", 
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+        
+        private void MenuClearResults_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentResults == null || _currentResults.Count == 0)
+            {
+                MessageBox.Show("No results to clear.", "Clear Results", 
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            
+            var result = MessageBox.Show(
+                "Clear all results? This cannot be undone.",
+                "Clear Results",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+            
+            if (result == MessageBoxResult.Yes)
+            {
+                // Clear results
+                _currentResults = null;
+                _currentJsonFilePath = null;
+                GroupsList.ItemsSource = null;
+                FilesList.ItemsSource = null;
+                
+                // Clear preview
+                ClearPreview();
+                
+                // Show empty states
+                EmptyGroupsState.Visibility = Visibility.Visible;
+                EmptyFilesState.Visibility = Visibility.Visible;
+                EmptyPreviewState.Visibility = Visibility.Visible;
+                FileInfoPanel.Visibility = Visibility.Collapsed;
+                
+                // Update UI
+                TxtGroupCount.Text = "";
+                MenuExportJsonItem.IsEnabled = false;
+                MenuClearResultsItem.IsEnabled = false;
+                TxtStatus.Text = "Ready";
+                TxtStatusBar.Text = "Results cleared. Load a JSON report or start a new scan.";
+            }
+        }
+        
+        private void MenuExit_Click(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Shutdown();
+        }
+        
+        private void MenuNewScan_Click(object sender, RoutedEventArgs e)
+        {
+            // Switch to Scanner tab
+            MainTabControl.SelectedIndex = 0;
+        }
+        
+        private void MenuStopScan_Click(object sender, RoutedEventArgs e)
+        {
+            ScannerTabControl.StopCurrentScan();
+        }
+        
+        private void MenuAbout_Click(object sender, RoutedEventArgs e)
+        {
+            var aboutWindow = new AboutWindow(AppVersion)
+            {
+                Owner = this
+            };
+            aboutWindow.ShowDialog();
+        }
+        
+        private void MainTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.Source != MainTabControl) return;
+            
+            // Update menu items state based on active tab (Results tab is now index 2)
+            bool isResultsTab = MainTabControl.SelectedIndex == 2;
+            bool hasResults = _currentResults != null && _currentResults.Count > 0;
+            
+            MenuExportJsonItem.IsEnabled = isResultsTab && hasResults;
+            MenuClearResultsItem.IsEnabled = isResultsTab && hasResults;
         }
 
         // ============ JSON LOADING ============
 
         private async void BtnLoadJson_Click(object sender, RoutedEventArgs e)
+        {
+            LoadJsonReport();
+        }
+        
+        private async void LoadJsonReport()
         {
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
@@ -52,24 +409,30 @@ namespace CzkawkaWin
 
             if (openFileDialog.ShowDialog() == true)
             {
-                TxtStatus.Text = "Loading and processing... (Please wait)";
-
-                // Disable button to prevent double clicks
-                ((Button)sender).IsEnabled = false;
+                TxtStatus.Text = "Loading...";
+                TxtStatusBar.Text = "Loading and processing file... (Please wait)";
 
                 try
                 {
                     string path = openFileDialog.FileName;
+                    _currentJsonFilePath = path;
 
                     // Run heavy processing on background thread to keep UI responsive
                     List<DuplicateGroup> groups = await Task.Run(() => LoadAndProcessData(path));
 
+                    // Store results for export
+                    _currentResults = groups;
+                    
                     // Bind result to left panel list
                     GroupsList.ItemsSource = groups;
 
-                    TxtStatus.Text = $"Done! {groups.Count} duplicate groups found.";
-                    TxtStatusBar.Text = $"Loaded {groups.Count} groups. Select a group to view duplicate files.";
+                    TxtStatus.Text = $"{groups.Count} groups";
+                    TxtStatusBar.Text = $"Loaded {groups.Count} duplicate groups. Select a group to view files.";
                     TxtGroupCount.Text = $"({groups.Count})";
+                    
+                    // Enable menu items
+                    MenuExportJsonItem.IsEnabled = groups.Count > 0;
+                    MenuClearResultsItem.IsEnabled = groups.Count > 0;
                     
                     // Hide empty state when data is loaded
                     EmptyGroupsState.Visibility = Visibility.Collapsed;
@@ -77,42 +440,17 @@ namespace CzkawkaWin
                 catch (Exception ex)
                 {
                     MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    TxtStatus.Text = "Error loading file.";
-                }
-                finally
-                {
-                    ((Button)sender).IsEnabled = true;
+                    TxtStatus.Text = "Error";
+                    TxtStatusBar.Text = "Error loading file.";
                 }
             }
         }
 
-        // Optimized method to read and transform data
+        // Optimized method to read and transform data (supports both CLI and legacy formats)
         private static List<DuplicateGroup> LoadAndProcessData(string filePath)
         {
             string json = File.ReadAllText(filePath);
-            var rawData = JsonSerializer.Deserialize<Dictionary<string, List<FileItem>>>(json);
-
-            var resultList = new List<DuplicateGroup>(rawData?.Count ?? 0);
-
-            if (rawData != null)
-            {
-                foreach (var kvp in rawData)
-                {
-                    long size = kvp.Value.Count > 0 ? kvp.Value[0].Size : 0;
-
-                    resultList.Add(new DuplicateGroup
-                    {
-                        SizeBytes = size,
-                        Count = kvp.Value.Count,
-                        Items = kvp.Value
-                    });
-                }
-            }
-
-            // Sort by size descending (largest files first)
-            resultList.Sort((a, b) => b.SizeBytes.CompareTo(a.SizeBytes));
-
-            return resultList;
+            return ParseJsonContent(json);
         }
 
         // ============ THUMBNAIL GENERATION ============
@@ -520,12 +858,44 @@ namespace CzkawkaWin
         }
 
         // ============ UTILITY METHODS ============
+        
+        private void ExecuteStartScan()
+        {
+            // Switch to Scanner tab and trigger scan
+            MainTabControl.SelectedIndex = 0;
+            // Note: The actual scan start is handled by the ScannerTab
+        }
 
         private static string FormatTime(TimeSpan time)
         {
             if (time.TotalHours >= 1)
                 return time.ToString(@"hh\:mm\:ss");
             return time.ToString(@"mm\:ss");
+        }
+    }
+    
+    /// <summary>
+    /// Simple ICommand implementation for keyboard shortcuts
+    /// </summary>
+    public class RelayCommand : ICommand
+    {
+        private readonly Action<object?> _execute;
+        private readonly Predicate<object?>? _canExecute;
+
+        public RelayCommand(Action<object?> execute, Predicate<object?>? canExecute = null)
+        {
+            _execute = execute ?? throw new ArgumentNullException(nameof(execute));
+            _canExecute = canExecute;
+        }
+
+        public bool CanExecute(object? parameter) => _canExecute?.Invoke(parameter) ?? true;
+
+        public void Execute(object? parameter) => _execute(parameter);
+
+        public event EventHandler? CanExecuteChanged
+        {
+            add => CommandManager.RequerySuggested += value;
+            remove => CommandManager.RequerySuggested -= value;
         }
     }
 }

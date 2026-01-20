@@ -1,14 +1,24 @@
 ﻿# 🔍 CzkawkaWin - Duplicate File Finder
 
-A high-performance Windows desktop application for visualizing and managing duplicate files found by [Czkawka](https://github.com/qarmin/czkawka). Built with WPF and .NET 10, featuring video preview with FFmpeg integration.
+A high-performance Windows desktop application for finding and managing duplicate files. Features an **integrated scanner** powered by [Czkawka CLI](https://github.com/qarmin/czkawka) and a results viewer with video preview support using FFmpeg. Built with WPF and .NET 10.
 
 ![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet)
 ![WPF](https://img.shields.io/badge/WPF-Windows-0078D4?logo=windows)
-![Version](https://img.shields.io/badge/version-0.0.1--alpha-orange)
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ## ✨ Features
 
+### 🔍 Integrated Scanner
+- **Direct Czkawka Integration**: Run duplicate scans directly from the UI
+- **Multiple Search Methods**: Name, Size, or Hash-based scanning
+- **Hash Algorithms**: BLAKE3 (secure), CRC32 (fast), XXH3 (extremely fast)
+- **File Filters**: Extension macros (IMAGE, VIDEO, MUSIC, TEXT) and custom extensions
+- **Size Filters**: Min/max file size configuration
+- **Profile System**: Save and load scan configurations
+- **Real-time Output**: Live log of scan progress
+
+### 📊 Results Viewer
 - **📂 JSON Report Viewer**: Load and parse Czkawka duplicate file scan results
 - **🖼️ Image Preview**: View image files directly in the application
 - **🎬 Video Preview**: Play video files with built-in media player controls
@@ -17,7 +27,23 @@ A high-performance Windows desktop application for visualizing and managing dupl
 - **📊 Smart Grouping**: Organize duplicates by file size with file counts
 - **🔎 Detailed Information**: View file size, date, video resolution, codec, and frame rate
 - **📁 Quick Access**: Double-click any file to open its location in Windows Explorer
-- **🎨 Modern Dark UI**: Clean, professional interface with empty states and status feedback
+- **💾 Export Results**: Export scan results to JSON format
+
+### ⌨️ Keyboard Shortcuts
+| Shortcut | Action |
+|----------|--------|
+| `F5` | Start/Focus Scanner |
+| `Escape` | Stop Scan |
+| `Ctrl+O` | Open JSON Report |
+| `Ctrl+S` | Export Results |
+| `Ctrl+Shift+C` | Clear Results |
+
+### 🎨 User Experience
+- **Modern Dark UI**: Clean, professional interface
+- **Two-Tab Layout**: Separate Scanner and Results views
+- **Empty States**: Helpful instructions when no data is loaded
+- **Status Feedback**: Real-time status bar updates
+- **Input Validation**: Visual feedback for invalid inputs
 
 ## 📸 Screenshots
 
@@ -64,40 +90,65 @@ dotnet build --configuration Release
 dotnet run --project CzkawkaWin
 ```
 
-### FFmpeg Setup
+### Czkawka CLI Setup
 
-The application requires FFmpeg for video thumbnail generation and metadata extraction:
+The application requires Czkawka CLI for scanning functionality:
 
-1. Download FFmpeg binaries from [ffmpeg.org](https://ffmpeg.org/download.html)
-2. Extract and place `ffmpeg.exe` and `ffprobe.exe` in the `ffmpeg/` folder next to the executable:
+1. Download `czkawka_cli.exe` from [Czkawka Releases](https://github.com/qarmin/czkawka/releases)
+2. Place it in the application directory:
    ```
    CzkawkaWin/
    ├── CzkawkaWin.exe
+   ├── czkawka_cli.exe    # Required for scanning
    └── ffmpeg/
        ├── ffmpeg.exe
        └── ffprobe.exe
    ```
 
-**Note**: Release builds include FFmpeg binaries automatically.
+### FFmpeg Setup
+
+The application requires FFmpeg for video thumbnail generation and metadata extraction:
+
+1. Download FFmpeg binaries from [ffmpeg.org](https://ffmpeg.org/download.html)
+2. Extract and place `ffmpeg.exe` and `ffprobe.exe` in the `ffmpeg/` folder next to the executable
+
+**Note**: Release builds include both Czkawka CLI and FFmpeg binaries automatically.
 
 ## 📖 Usage
 
+### Integrated Scanner (Recommended)
+1. **Configure Scan**
+   - Go to the **Scanner** tab
+   - Add directories to scan using **"+ Add Folder"**
+   - Select search method (Name/Size/Hash)
+   - Configure filters (extensions, file size)
+
+2. **Run Scan**
+   - Click **"Start Scan"** or press **F5**
+   - Monitor progress in the output log
+   - Results automatically load in the Results tab
+
+3. **Save Profiles**
+   - Save your scan configuration as a profile for reuse
+   - Profiles persist between sessions
+
+### Manual JSON Loading
 1. **Generate Duplicate Report**
    - Use [Czkawka](https://github.com/qarmin/czkawka) to scan for duplicates
    - Export results as JSON
 
 2. **Load in CzkawkaWin**
-   - Click **"📂 Load JSON Report"**
+   - Go to **File → Open JSON Report** (Ctrl+O)
    - Select your Czkawka JSON file
-   - Browse duplicate groups in the left panel
 
-3. **Review Files**
-   - Click a group to see all duplicate files
-   - Select a file to preview (images/videos)
-   - Double-click to open the file location
+### Review Results
+- Click a group to see all duplicate files
+- Select a file to preview (images/videos)
+- Double-click to open the file location
+- Export results via **File → Export JSON** (Ctrl+S)
 
-4. **Video Controls**
-   - Play/Pause/Stop controls for video files
+### Video Controls
+- Play/Pause/Stop controls for video files
    - Seek bar for navigation
    - Displays video metadata (resolution, codec, fps)
 
@@ -113,22 +164,35 @@ The application requires FFmpeg for video thumbnail generation and metadata extr
 ```
 CzkawkaWin/
 ├── CzkawkaWin/
-│   ├── MainWindow.xaml          # Main UI layout
-│   ├── MainWindow.xaml.cs       # UI logic and event handlers
-│   ├── FileItem.cs              # File model with metadata
-│   ├── DuplicateGroup.cs        # Group model for duplicates
-│   ├── App.xaml                 # Application resources
-│   └── CzkawkaWin.csproj        # Project configuration
-├── ffmpeg/                      # FFmpeg binaries (runtime)
-└── README.md                    # This file
+│   ├── Models/
+│   │   ├── ScanConfiguration.cs    # Scan settings model
+│   │   ├── AppSettings.cs          # Application settings
+│   │   ├── FileItem.cs             # File model with metadata
+│   │   └── DuplicateGroup.cs       # Group model for duplicates
+│   ├── Services/
+│   │   ├── CzkawkaService.cs       # Czkawka CLI integration
+│   │   ├── ConfigurationService.cs # Profile persistence
+│   │   └── AppSettingsService.cs   # App settings persistence
+│   ├── Views/
+│   │   └── ScannerTab.xaml(.cs)    # Scanner UI
+│   ├── Events/
+│   │   └── ScanCompletedEventArgs.cs
+│   ├── MainWindow.xaml(.cs)        # Main window with tabs
+│   ├── App.xaml                    # Application resources
+│   └── CzkawkaWin.csproj           # Project configuration
+├── ffmpeg/                         # FFmpeg binaries (runtime)
+├── czkawka_cli.exe                 # Czkawka CLI (runtime)
+└── README.md                       # This file
 ```
 
 ## 🎯 Roadmap
 
-- [ ] Full integration with Czkawka scanning
+- [x] Full integration with Czkawka scanning
+- [x] Profile system for scan configurations
+- [x] Export results to JSON
 - [ ] File deletion with safety confirmations
 - [ ] Compare files side-by-side
-- [ ] Settings panel
+- [ ] Settings panel for app preferences
 
 ## 🤝 Contributing
 
@@ -153,4 +217,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Note**: CzkawkaWin is a viewer/manager for Czkawka results. You still need [Czkawka](https://github.com/qarmin/czkawka) to scan for duplicates.
+**Note**: CzkawkaWin includes an integrated scanner powered by Czkawka CLI. You can also load existing JSON reports from [Czkawka](https://github.com/qarmin/czkawka) scans.

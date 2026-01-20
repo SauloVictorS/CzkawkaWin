@@ -5,6 +5,38 @@ All notable changes to CzkawkaWin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 16-01-2026
+
+### Added
+- **Integrated Scanner**: Full Czkawka CLI integration for scanning directly from the UI
+- **Scanner Tab**: New dedicated tab for configuring and running scans
+- **Search Methods**: Support for Name, Size, and Hash-based duplicate detection
+- **Hash Algorithms**: BLAKE3, CRC32, and XXH3 options
+- **File Filters**: Extension macros (IMAGE, VIDEO, MUSIC, TEXT) and custom extensions
+- **Size Filters**: Configurable minimum and maximum file size
+- **Profile System**: Save, load, and delete scan configuration profiles
+- **Real-time Logging**: Live output log during scan execution
+- **Progress Indicator**: Visual feedback during scan operations
+- **Clear Results**: Menu option to clear all results (Ctrl+Shift+C)
+- **Export JSON**: Export scan results to JSON file (Ctrl+S)
+- **Keyboard Shortcuts**: F5 (Start Scan), Escape (Stop), Ctrl+O (Open), Ctrl+S (Export)
+- **Input Validation**: Real-time validation with visual feedback for file size inputs
+- **Application Settings**: Model for persisting app preferences
+
+### Changed
+- Reorganized UI into tabbed interface (Scanner, Results)
+- Updated main menu structure with Scan menu
+- Improved status bar with contextual messages
+- Enhanced project structure with Services and Models folders
+
+### Technical Details
+- CzkawkaService for process management and CLI integration
+- ConfigurationService for profile persistence
+- AppSettingsService for application settings
+- ScanConfiguration model for scan parameters
+- ScanCompletedEventArgs for scan result events
+- RelayCommand implementation for keyboard shortcuts
+
 ## [0.0.1] - 15-01-2026
 
 ### Added
@@ -35,10 +67,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned Features
-- Full integration with Czkawka scanning
 - File deletion with safety confirmations
 - Compare files side-by-side
-- Settings panel
+- Settings panel for app preferences
 
 ---
 

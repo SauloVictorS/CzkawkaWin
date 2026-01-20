@@ -1,0 +1,124 @@
+PS C:\Users\saulo\Downloads> .\czkawka_cli.exe dup --help
+Finds duplicate files
+
+Usage: czkawka_cli.exe dup [OPTIONS] --directories <DIRECTORIES>
+
+Options:
+  -T, --thread-number <THREAD_NUMBER>
+          Limits thread number, 0(default) will use all available threads
+
+          [default: 0]
+
+  -d, --directories <DIRECTORIES>
+          List of directorie(s) which will be searched(absolute path) - this directories are not set as reference folders
+
+  -e, --excluded-directories <EXCLUDED_DIRECTORIES>
+          List of directorie(s) which will be excluded from search(absolute path)
+
+  -E, --excluded-items <EXCLUDED_ITEMS>
+          List of excluded item(s) which contains * wildcard(may be slow, so use -e where possible)
+
+  -x, --allowed-extensions <ALLOWED_EXTENSIONS>
+          List of checked files with provided extension(s). There are also helpful macros which allow to easy use a typical extensions like:
+          IMAGE("jpg,kra,gif,png,bmp,tiff,hdr,svg"),
+          TEXT("txt,doc,docx,odt,rtf"),
+          VIDEO("mp4,flv,mkv,webm,vob,ogv,gifv,avi,mov,wmv,mpg,m4v,m4p,mpeg,3gp") or
+          MUSIC("mp3,flac,ogg,tta,wma,webm")
+
+
+  -P, --excluded-extensions <EXCLUDED_EXTENSIONS>
+          List of extensions, that will be removed from search.
+
+
+  -f, --file-to-save <file-name>
+          Saves the results into the formatted txt file
+
+  -C, --compact-file-to-save <json-file-name>
+          Saves the results into the compact json file
+
+  -p, --pretty-file-to-save <pretty-json-file-name>
+          Saves the results into the pretty json file
+
+  -R, --not-recursive
+          Prevents from recursive check of folders
+
+  -N, --do-not-print-results
+          Do not print the results to the console
+
+  -M, --do-not-print-messages
+          Do not print info/warnings/errors from the program to console
+
+  -W, --ignore-error-code-on-found
+          Ignore error code when files are found
+
+  -H, --disable-cache
+          Disable cache
+
+  -r, --reference-directories <REFERENCE_DIRECTORIES>
+          List of directorie(s) which will be searched(absolute path) - this directories are set as reference folders, so will not be visible in the results
+
+  -Z, --minimal-prehash-cache-file-size <MINIMAL_PREHASH_CACHE_FILE_SIZE>
+          Minimum size of prehash cached files in bytes
+
+          [default: 257144]
+
+  -u, --use-prehash-cache
+          Use prehash cache to speed up the scanning process by avoiding rehashing files that have already been hashed
+
+  -m, --minimal-file-size <MINIMAL_FILE_SIZE>
+          Minimum size of checked files in bytes, assigning bigger value may speed up searching
+
+          [default: 8192]
+
+  -i, --maximal-file-size <MAXIMAL_FILE_SIZE>
+          Maximum size of checked files in bytes, assigning lower value may speed up searching
+
+          [default: 18446744073709551615]
+
+  -c, --minimal-cached-file-size <MINIMAL_CACHED_FILE_SIZE>
+          Minimum size of cached files in bytes, assigning bigger value may speed up the scan but loading the cache will be slower, assigning smaller value may slow down the scan and some files may need to be hashed again but loading the cache will be faster
+
+          [default: 257144]
+
+  -s, --search-method <SEARCH_METHOD>
+          Methods to search files.
+          NAME - Fast but but rarely usable,
+          SIZE - Fast but not accurate, checking by the file's size,
+          HASH - The slowest method, checking by the hash of the entire file
+
+          [default: HASH]
+
+  -D, --delete-method <DELETE_METHOD>
+          Methods to delete the files.
+          AEN - All files except the newest,
+          AEO - All files except the oldest,
+          ON - Only 1 file, the newest,
+          OO - Only 1 file, the oldest
+          AEB - All files except the biggest,
+          AES - All files except the smallest,
+          OB - Only 1 file, the biggest,
+          OS - Only 1 file, the smallest
+          HARD - create hard link
+          NONE - not delete files
+
+          [default: NONE]
+
+  -t, --hash-type <HASH_TYPE>
+          Hash type (BLAKE3, CRC32, XXH3)
+
+          [default: BLAKE3]
+
+  -l, --case-sensitive-name-comparison
+          Use case sensitive name comparison
+
+  -L, --allow-hard-links
+          Do not ignore hard links
+
+      --dry-run
+          Do nothing and print the operation that would happen.
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+EXAMPLE:
+    czkawka dup -d /home/rafal -e /home/rafal/Obrazy  -m 25 -x 7z rar IMAGE -s hash -f results.txt -D aeo

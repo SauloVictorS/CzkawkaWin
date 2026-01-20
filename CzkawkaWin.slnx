@@ -1,3 +1,13 @@
 <Solution>
-  <Project Path="CzkawkaWin/CzkawkaWin.csproj" />
+  <Configurations>
+    <Platform Name="ARM64" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="CzkawkaWin/CzkawkaWin.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="Packeger/Packeger.wapproj" Type="c7167f0d-bc9f-4e6e-afe1-012c56b48db5" Id="43b6ef82-dfbe-4d3b-8d42-cbb59b84af0f">
+    <Deploy />
+  </Project>
 </Solution>

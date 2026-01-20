@@ -1,0 +1,212 @@
+<UserControl x:Class="CzkawkaWin.Views.FiltersTab"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="1000"
+             Background="#252525">
+
+    <UserControl.Resources>
+        <Style x:Key="SectionHeader" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="#999"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+        
+        <Style x:Key="OptionLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#ccc"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+        
+        <Style x:Key="SectionBorder" TargetType="Border">
+            <Setter Property="Background" Value="#2a2a2a"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="14"/>
+            <Setter Property="Margin" Value="5"/>
+        </Style>
+        
+        <Style x:Key="DarkButton" TargetType="Button">
+            <Setter Property="Background" Value="#3a3a3a"/>
+            <Setter Property="Foreground" Value="#ddd"/>
+            <Setter Property="BorderBrush" Value="#555"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" 
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#4a4a4a"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#666"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#2a2a2a"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#555"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Background" Value="#2a2a2a"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#333"/>
+                                <Setter Property="Foreground" Value="#666"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="10">
+            
+            <!-- FILE EXTENSION FILTERS -->
+            <Border Style="{StaticResource SectionBorder}" Margin="0,5,0,5">
+                <StackPanel>
+                    <TextBlock Text="FILE EXTENSION FILTERS" Style="{StaticResource SectionHeader}"/>
+                    <TextBlock Text="Only scan files with these extensions (leave empty for all files)" 
+                               Foreground="#666" FontSize="11" Margin="0,0,0,12"/>
+                    
+                    <!-- Extension Macros -->
+                    <TextBlock Text="Quick Filters:" Foreground="#888" FontSize="11" Margin="0,0,0,6"/>
+                    <WrapPanel Margin="0,0,0,12">
+                        <CheckBox x:Name="ChkMacroImage" Content="IMAGE (jpg, png, gif, bmp...)" 
+                                  Checked="MacroButton_Changed" Unchecked="MacroButton_Changed"
+                                  Foreground="#ccc" Margin="0,0,20,4"/>
+                        <CheckBox x:Name="ChkMacroVideo" Content="VIDEO (mp4, mkv, avi, mov...)" 
+                                  Checked="MacroButton_Changed" Unchecked="MacroButton_Changed"
+                                  Foreground="#ccc" Margin="0,0,20,4"/>
+                        <CheckBox x:Name="ChkMacroMusic" Content="MUSIC (mp3, flac, ogg, wav...)" 
+                                  Checked="MacroButton_Changed" Unchecked="MacroButton_Changed"
+                                  Foreground="#ccc" Margin="0,0,20,4"/>
+                        <CheckBox x:Name="ChkMacroText" Content="TEXT (txt, doc, pdf, xls...)" 
+                                  Checked="MacroButton_Changed" Unchecked="MacroButton_Changed"
+                                  Foreground="#ccc" Margin="0,0,20,4"/>
+                    </WrapPanel>
+                    
+                    <!-- Custom Extensions -->
+                    <TextBlock Text="Custom Extensions (space-separated, without dot):" Foreground="#888" FontSize="11" Margin="0,0,0,6"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="TxtCustomExtensions" 
+                                 ToolTip="Enter extensions separated by space (e.g., pdf doc xlsx)"
+                                 Background="#333" Foreground="#ddd" BorderBrush="#444"
+                                 Padding="8,6"/>
+                        <Button Grid.Column="1" Content="Clear" Click="BtnClearExtensions_Click"
+                                Style="{StaticResource DarkButton}" Padding="12,6" Margin="8,0,0,0"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+            
+            <!-- FILE SIZE FILTERS -->
+            <Border Style="{StaticResource SectionBorder}" Margin="0,5">
+                <StackPanel>
+                    <TextBlock Text="FILE SIZE FILTERS" Style="{StaticResource SectionHeader}"/>
+                    <TextBlock Text="Only scan files within this size range" 
+                               Foreground="#666" FontSize="11" Margin="0,0,0,12"/>
+                    
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="60"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <TextBlock Grid.Column="0" Text="Minimum:" Style="{StaticResource OptionLabel}" Margin="0,0,10,0"/>
+                        <TextBox Grid.Column="1" x:Name="TxtMinSize" Text="8" 
+                                 Background="#333" Foreground="#ddd" BorderBrush="#444"
+                                 Padding="8,6" TextAlignment="Right"/>
+                        <ComboBox Grid.Column="2" x:Name="CmbMinSizeUnit" SelectedIndex="0" Margin="8,0,0,0">
+                            <ComboBoxItem Content="KB"/>
+                            <ComboBoxItem Content="MB"/>
+                            <ComboBoxItem Content="GB"/>
+                        </ComboBox>
+                        
+                        <TextBlock Grid.Column="3" Text="" Margin="20,0"/>
+                        
+                        <TextBlock Grid.Column="4" Text="Maximum:" Style="{StaticResource OptionLabel}" Margin="0,0,10,0"/>
+                        <TextBox Grid.Column="5" x:Name="TxtMaxSize" Text="" 
+                                 Background="#333" Foreground="#ddd" BorderBrush="#444"
+                                 Padding="8,6" TextAlignment="Right"
+                                 ToolTip="Leave empty for no limit"/>
+                        <ComboBox Grid.Column="6" x:Name="CmbMaxSizeUnit" SelectedIndex="1" Margin="8,0,0,0">
+                            <ComboBoxItem Content="KB"/>
+                            <ComboBoxItem Content="MB"/>
+                            <ComboBoxItem Content="GB"/>
+                        </ComboBox>
+                    </Grid>
+                </StackPanel>
+            </Border>
+            
+            <!-- EXCLUDED ITEMS -->
+            <Border Style="{StaticResource SectionBorder}" Margin="0,5">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="EXCLUDED ITEMS" Style="{StaticResource SectionHeader}" Margin="0"/>
+                            <TextBlock Text=" (wildcards supported)" Foreground="#666" FontSize="10" 
+                                       VerticalAlignment="Center" Margin="5,0,0,0"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="Restore Defaults" Click="BtnRestoreExcludedDefaults_Click"
+                                Style="{StaticResource DarkButton}" Padding="10,4" Margin="0,0,0,8"/>
+                    </Grid>
+                    <TextBlock Text="Paths and patterns to exclude from scan (comma-separated)" 
+                               Foreground="#666" FontSize="11" Margin="0,0,0,8"/>
+                    <TextBox x:Name="TxtExcludedItems" 
+                             MinHeight="100" MaxHeight="150"
+                             TextWrapping="Wrap"
+                             AcceptsReturn="False"
+                             VerticalScrollBarVisibility="Auto"
+                             Background="#333" Foreground="#ddd" BorderBrush="#444"
+                             Padding="10"
+                             ToolTip="Comma-separated patterns with wildcards"/>
+                    <TextBlock Text="Examples: *\.git\*, *\node_modules\*, *:\$RECYCLE.BIN\*, *:\Windows\*" 
+                               Foreground="#555" FontSize="10" Margin="0,6,0,0"/>
+                </StackPanel>
+            </Border>
+            
+            <!-- EXCLUDED EXTENSIONS -->
+            <Border Style="{StaticResource SectionBorder}" Margin="0,5,0,0">
+                <StackPanel>
+                    <TextBlock Text="EXCLUDED EXTENSIONS" Style="{StaticResource SectionHeader}"/>
+                    <TextBlock Text="File extensions to exclude from scan (space-separated, without dot)" 
+                               Foreground="#666" FontSize="11" Margin="0,0,0,8"/>
+                    <TextBox x:Name="TxtExcludedExtensions" 
+                             MinHeight="60"
+                             TextWrapping="Wrap"
+                             AcceptsReturn="False"
+                             VerticalScrollBarVisibility="Auto"
+                             Background="#333" Foreground="#ddd" BorderBrush="#444"
+                             Padding="10"
+                             ToolTip="Space-separated extensions to exclude"/>
+                    <TextBlock Text="Examples: tmp log bak cache old" 
+                               Foreground="#555" FontSize="10" Margin="0,6,0,0"/>
+                </StackPanel>
+            </Border>
+            
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
