@@ -1,4 +1,4 @@
-# Changelog
+﻿# Changelog
 
 All notable changes to CzkawkaWin will be documented in this file.
 
@@ -67,9 +67,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned Features
-- File deletion with safety confirmations
 - Compare files side-by-side
 - Settings panel for app preferences
+- Support for multiple languages
 
 ---
 

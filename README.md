@@ -190,9 +190,10 @@ CzkawkaWin/
 - [x] Full integration with Czkawka scanning
 - [x] Profile system for scan configurations
 - [x] Export results to JSON
-- [ ] File deletion with safety confirmations
+- [x] File deletion with safety confirmations
 - [ ] Compare files side-by-side
 - [ ] Settings panel for app preferences
+- [ ] Support for multiple languages
 
 ## 🤝 Contributing
 
