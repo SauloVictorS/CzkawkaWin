@@ -186,6 +186,7 @@ WindowStartupLocation="CenterScreen">
                         <Grid Grid.Column="2" Background="#252525">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
 
@@ -197,20 +198,27 @@ WindowStartupLocation="CenterScreen">
                                 </StackPanel>
                             </Border>
 
+                            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="5,5,5,0">
+                                <Button x:Name="BtnSelectAll" Content="Select All" Margin="2" Click="BtnSelectAll_Click" />
+                                <Button x:Name="BtnSelectInverse" Content="Select Inverse" Margin="2" Click="BtnSelectInverse_Click" />
+                                <Button x:Name="BtnDeleteSelected" Content="Delete Selected" Margin="2" Click="BtnDeleteSelected_Click" />
+                            </StackPanel>
+
                             <!-- Empty State for Files -->
-                            <StackPanel x:Name="EmptyFilesState" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="20">
+                            <StackPanel x:Name="EmptyFilesState" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="20">
                                 <TextBlock Text="👈" Style="{StaticResource EmptyStateIcon}"/>
                                 <TextBlock Text="Select a group" Style="{StaticResource EmptyStateText}" FontWeight="SemiBold" FontSize="14"/>
                                 <TextBlock Text="Choose a duplicate group from&#x0a;the left panel to see files" 
                                Style="{StaticResource EmptyStateText}" Margin="0,8,0,0" LineHeight="20"/>
                             </StackPanel>
 
-                            <ListView Grid.Row="1" Name="FilesList" 
+                            <ListView Grid.Row="2" Name="FilesList" 
                           ItemsSource="{Binding ElementName=GroupsList, Path=SelectedItem.Items}"
                           SelectionChanged="FilesList_SelectionChanged"
                           MouseDoubleClick="FilesList_MouseDoubleClick"
                           Background="Transparent"
-                          BorderThickness="0">
+                          BorderThickness="0"
+                          SelectionMode="Extended">
                                 <ListView.ItemTemplate>
                                     <DataTemplate>
                                         <Border Padding="8,6" Margin="4,2" Background="#333" CornerRadius="4">

@@ -1,8 +1,10 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Windows.Data;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
@@ -866,36 +868,338 @@ namespace CzkawkaWin
             // Note: The actual scan start is handled by the ScannerTab
         }
 
-        private static string FormatTime(TimeSpan time)
-        {
-            if (time.TotalHours >= 1)
-                return time.ToString(@"hh\:mm\:ss");
-            return time.ToString(@"mm\:ss");
+                private static string FormatTime(TimeSpan time)
+
+                {
+
+                    if (time.TotalHours >= 1)
+
+                        return time.ToString(@"hh\:mm\:ss");
+
+                    return time.ToString(@"mm\:ss");
+
+                }
+
+                
+
+                // ============ FILE ACTIONS ============
+
+        
+
+                private void BtnSelectAll_Click(object sender, RoutedEventArgs e)
+
+                {
+
+                    if (FilesList.HasItems)
+
+                    {
+
+                        FilesList.SelectAll();
+
+                    }
+
+                }
+
+        
+
+                private void BtnSelectInverse_Click(object sender, RoutedEventArgs e)
+
+                {
+
+                    if (!FilesList.HasItems) return;
+
+        
+
+                    var selectedItems = new List<object>();
+
+                    foreach (var item in FilesList.SelectedItems)
+
+                    {
+
+                        selectedItems.Add(item);
+
+                    }
+
+        
+
+                    if (FilesList.SelectedItems.Count == FilesList.Items.Count)
+
+                    {
+
+                        FilesList.UnselectAll();
+
+                        return;
+
+                    }
+
+                    
+
+                    FilesList.SelectAll();
+
+        
+
+                    foreach (var item in selectedItems)
+
+                    {
+
+                        FilesList.SelectedItems.Remove(item);
+
+                    }
+
+                }
+
+        
+
+                private void BtnDeleteSelected_Click(object sender, RoutedEventArgs e)
+
+                {
+
+                    var selectedFiles = FilesList.SelectedItems.Cast<FileItem>().ToList();
+
+        
+
+                    if (selectedFiles.Count == 0)
+
+                    {
+
+                        MessageBox.Show("No files selected for deletion.", "Delete Files", 
+
+                            MessageBoxButton.OK, MessageBoxImage.Information);
+
+                        return;
+
+                    }
+
+        
+
+                    var result = MessageBox.Show(
+
+                        $"Are you sure you want to permanently delete {selectedFiles.Count} file(s)?\n\nThis action cannot be undone.",
+
+                        "Confirm Deletion",
+
+                        MessageBoxButton.YesNo,
+
+                        MessageBoxImage.Warning);
+
+        
+
+                    if (result != MessageBoxResult.Yes) return;
+
+        
+
+                    int deletedCount = 0;
+
+                    List<string> errorMessages = new List<string>();
+
+        
+
+                    // Get the current group to update it later
+
+                    var currentGroup = GroupsList.SelectedItem as DuplicateGroup;
+
+                    if (currentGroup == null) return;
+
+                    
+
+                    foreach (var file in selectedFiles)
+
+                    {
+
+                        try
+
+                        {
+
+                            File.Delete(file.Path);
+
+                            deletedCount++;
+
+                            // Remove from the source collection
+
+                            currentGroup.Items.Remove(file);
+
+                        }
+
+                        catch (Exception ex)
+
+                        {
+
+                            errorMessages.Add($"Failed to delete {file.FileName}: {ex.Message}");
+
+                        }
+
+                    }
+
+                    
+
+                    // Update group properties
+
+                    currentGroup.Count = currentGroup.Items.Count;
+
+                    
+
+                    // If group has less than 2 files, it's no longer a duplicate group
+
+                                    if (currentGroup.Count < 2)
+
+                                    {
+
+                                        _currentResults?.Remove(currentGroup);
+
+                                    }
+
+                    
+
+                                    // Deselect the group before refreshing to avoid issues
+
+                                    GroupsList.SelectedItem = null;
+
+                    
+
+                                    // Refresh UI
+
+                                    RefreshResults();
+
+        
+
+                    // Show summary
+
+                    string summaryMessage = $"{deletedCount} file(s) deleted successfully.";
+
+                    if (errorMessages.Count > 0)
+
+                    {
+
+                        summaryMessage += $"\n\nCould not delete {errorMessages.Count} file(s):\n" +
+
+                                          string.Join("\n", errorMessages);
+
+                    }
+
+                    
+
+                    MessageBox.Show(summaryMessage, "Deletion Complete", MessageBoxButton.OK, 
+
+                        errorMessages.Any() ? MessageBoxImage.Warning : MessageBoxImage.Information);
+
+                }
+
+                
+
+                        private void RefreshResults()
+
+                
+
+                        {
+
+                
+
+                            // Instead of resetting the source, refresh the CollectionView to update the UI
+
+                
+
+                            if (GroupsList.ItemsSource != null)
+
+                
+
+                            {
+
+                
+
+                                var view = CollectionViewSource.GetDefaultView(GroupsList.ItemsSource);
+
+                
+
+                                view?.Refresh();
+
+                
+
+                            }
+
+                
+
+                
+
+                
+
+                            ClearPreview();
+
+                
+
+                            
+
+                
+
+                            // Update counts and visibility
+
+                
+
+                            TxtGroupCount.Text = $"({_currentResults?.Count ?? 0})";
+
+                
+
+                            EmptyGroupsState.Visibility = (_currentResults == null || _currentResults.Count == 0) ? Visibility.Visible : Visibility.Collapsed;
+
+                
+
+                            EmptyFilesState.Visibility = Visibility.Visible;
+
+                
+
+                        }
+
+            }
+
+            
+
+            /// <summary>
+
+            /// Simple ICommand implementation for keyboard shortcuts
+
+            /// </summary>
+
+            public class RelayCommand : ICommand
+
+            {
+
+                private readonly Action<object?> _execute;
+
+                private readonly Predicate<object?>? _canExecute;
+
+        
+
+                public RelayCommand(Action<object?> execute, Predicate<object?>? canExecute = null)
+
+                {
+
+                    _execute = execute ?? throw new ArgumentNullException(nameof(execute));
+
+                    _canExecute = canExecute;
+
+                }
+
+        
+
+                public bool CanExecute(object? parameter) => _canExecute?.Invoke(parameter) ?? true;
+
+        
+
+                public void Execute(object? parameter) => _execute(parameter);
+
+        
+
+                public event EventHandler? CanExecuteChanged
+
+                {
+
+                    add => CommandManager.RequerySuggested += value;
+
+                    remove => CommandManager.RequerySuggested -= value;
+
+                }
+
+            }
+
         }
-    }
-    
-    /// <summary>
-    /// Simple ICommand implementation for keyboard shortcuts
-    /// </summary>
-    public class RelayCommand : ICommand
-    {
-        private readonly Action<object?> _execute;
-        private readonly Predicate<object?>? _canExecute;
 
-        public RelayCommand(Action<object?> execute, Predicate<object?>? canExecute = null)
-        {
-            _execute = execute ?? throw new ArgumentNullException(nameof(execute));
-            _canExecute = canExecute;
-        }
-
-        public bool CanExecute(object? parameter) => _canExecute?.Invoke(parameter) ?? true;
-
-        public void Execute(object? parameter) => _execute(parameter);
-
-        public event EventHandler? CanExecuteChanged
-        {
-            add => CommandManager.RequerySuggested += value;
-            remove => CommandManager.RequerySuggested -= value;
-        }
-    }
-}
+        
