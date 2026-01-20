@@ -131,3 +131,5 @@ ffmpeg/ffprobe.exe
 
 # Temporary thumbnail cache
 **/CzkawkaWin_Thumbnails/
+/Packeger/AppPackages
+/Packeger/BundleArtifacts
