@@ -5,7 +5,13 @@ All notable changes to CzkawkaWin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 16-01-2026
+
+### Planned Features
+- Compare files side-by-side
+- Settings panel for app preferences
+- Support for multiple languages
+
+## [1.0.0] - 20-01-2026
 
 ### Added
 - **Integrated Scanner**: Full Czkawka CLI integration for scanning directly from the UI
@@ -22,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Keyboard Shortcuts**: F5 (Start Scan), Escape (Stop), Ctrl+O (Open), Ctrl+S (Export)
 - **Input Validation**: Real-time validation with visual feedback for file size inputs
 - **Application Settings**: Model for persisting app preferences
+- **File Deletion**: Option to delete selected files from the results.
 
 ### Changed
 - Reorganized UI into tabbed interface (Scanner, Results)
@@ -63,13 +70,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - System.Text.Json for high-performance JSON parsing
 - MVVM-like architecture with data binding
 - Asynchronous file operations to keep UI responsive
-
-## [Unreleased]
-
-### Planned Features
-- Compare files side-by-side
-- Settings panel for app preferences
-- Support for multiple languages
 
 ---
 
